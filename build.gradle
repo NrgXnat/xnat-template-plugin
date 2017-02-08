@@ -119,8 +119,10 @@ dependencies {
     compile("org.nrg.xdat:core:${vXnat}") {
         exclude group: '*'
     }
+    compile "org.nrg:dicom-xnat-util:${vXnat}"
     compile "org.nrg:prefs:${vXnat}"
     compile "org.nrg:framework:${vXnat}"
+    compile "dcm4che:dcm4che-core:2.0.29"
 
     compile(group: 'turbine', name: 'turbine', version: '2.3.3') {
         exclude group: '*'
