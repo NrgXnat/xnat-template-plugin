@@ -9,7 +9,7 @@
 
 buildscript {
     ext {
-        vXnat = "1.8.3"
+        vXnat = "1.8.4-SNAPSHOT"
     }
 }
 
@@ -22,7 +22,7 @@ plugins {
     id "com.palantir.git-version" version "0.12.1"
     id "io.franzbecker.gradle-lombok" version "4.0.0"
     id "io.spring.dependency-management" version "1.0.11.RELEASE"
-    id "org.nrg.xnat.build.xnat-data-builder" version "1.8.3"
+    id "org.nrg.xnat.build.xnat-data-builder" version "1.8.4-SNAPSHOT"
 }
 
 // TODO: Change the group and version to values appropriate for your plugin project.
