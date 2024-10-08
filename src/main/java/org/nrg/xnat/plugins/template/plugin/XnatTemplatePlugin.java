@@ -87,6 +87,8 @@ public class XnatTemplatePlugin {
     /**
      * Determines the project by extracting the contents from the specified DICOM tag.
      *
+     * @param configService The configuration service.
+     *
      * @return The project identifier.
      */
     @Bean
@@ -98,10 +100,10 @@ public class XnatTemplatePlugin {
      * Creates the DICOM object identifier.
      *
      * @param receivedFileUserProvider The user provider for writing files.
+     * @param mappedProjectIdentifier  The project identifier.
      *
      * @return The DICOM object identifier.
      */
-    @SuppressWarnings("SpringJavaAutowiringInspection")
     @Bean
     public ConfigurableMappedDicomObjectIdentifier mappedObjectIdentifier(final XnatUserProvider receivedFileUserProvider, final ConfigurableMappedProjectIdentifier mappedProjectIdentifier) {
         final ConfigurableMappedDicomObjectIdentifier identifier = new ConfigurableMappedDicomObjectIdentifier(mappedProjectIdentifier, mappedSubjectExtractor(), mappedSessionExtractor());

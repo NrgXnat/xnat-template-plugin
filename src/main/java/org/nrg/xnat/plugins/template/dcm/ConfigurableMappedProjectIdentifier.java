@@ -23,11 +23,12 @@ public final class ConfigurableMappedProjectIdentifier implements DicomProjectId
     /**
      * Constructor that sets the key tag for this identifier.
      *
-     * @param tag The tag to inspect to get the destination project.
+     * @param configService The configuration service to use to get the project map.
+     * @param tag           The tag to inspect to get the destination project.
      */
     public ConfigurableMappedProjectIdentifier(final ConfigService configService, final int tag) {
         _configService = configService;
-        _tag = tag;
+        _tag           = tag;
     }
 
     /**
