@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.dcm4che2.data.DicomObject;
+import org.dcm4che3.data.Attributes;
 
 import org.nrg.xdat.om.XnatProjectdata;
 import org.nrg.config.services.ConfigService;
@@ -42,7 +42,7 @@ public final class ConfigurableMappedProjectIdentifier implements DicomProjectId
      * {@inheritDoc}
      */
     @Override
-    public XnatProjectdata apply(final UserI user, final DicomObject dicom) {
+    public XnatProjectdata apply(final UserI user, final Attributes dicom) {
         return XnatProjectdata.getProjectByIDorAlias(getProjectId(dicom), user, false);
     }
 
@@ -54,7 +54,7 @@ public final class ConfigurableMappedProjectIdentifier implements DicomProjectId
         log.debug("Someone reset me but there's nothing to do");
     }
 
-    private String getProjectId(final DicomObject object) {
+    private String getProjectId(final Attributes object) {
         final String project = object.getString(_tag);
         try {
             final Map<String, String> projectMap = getProjectMap();

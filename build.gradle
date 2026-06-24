@@ -9,7 +9,18 @@
 
 buildscript {
     ext {
-        vXnat = "1.8.4-SNAPSHOT"
+        vXnat = "1.10.1-SNAPSHOT"
+    }
+    repositories {
+        mavenLocal()
+        maven { url "https://nrgxnat.jfrog.io/nrgxnat/libs-release" }
+        maven { url "https://nrgxnat.jfrog.io/nrgxnat/libs-snapshot" }
+        mavenCentral()
+    }
+    dependencies {
+        // xnat-data-builder needs core XNAT schemas (xnat.xsd) on its classpath to resolve
+        // xs:import in plugin-local schemas (template/template.xsd)
+        classpath "org.nrg.xnat:xnat-data-models:${vXnat}"
     }
 }
 
@@ -19,10 +30,10 @@ buildscript {
 plugins {
     id "jacoco"
     id "java"
-    id "com.palantir.git-version" version "0.12.1"
-    id "io.franzbecker.gradle-lombok" version "4.0.0"
-    id "io.spring.dependency-management" version "1.0.11.RELEASE"
-    id "org.nrg.xnat.build.xnat-data-builder" version "1.8.4-SNAPSHOT"
+    id "com.palantir.git-version" version "3.0.0"
+    id "io.franzbecker.gradle-lombok" version "5.0.0"
+    id "io.spring.dependency-management" version "1.1.7"
+    id "org.nrg.xnat.build.xnat-data-builder" version "${vXnat}"
 }
 
 // TODO: Change the group and version to values appropriate for your plugin project.
@@ -57,21 +68,44 @@ dependencies {
     implementation("org.nrg.xnat:web") {
         transitive = false
     }
-    implementation("org.nrg:dicom-xnat-mx") {
-        transitive = false
-    }
-    implementation("org.nrg.xnat:xnat-data-models") {
-        transitive = false
-    }
+    // dicom-xnat-mx and xnat-data-models merged into xnat-web in monorepo 1.10 — no longer separate artifacts
     implementation "org.nrg.xdat:core"
     implementation "org.nrg:dicom-xnat-util"
     implementation "org.nrg:prefs"
     implementation "org.nrg:framework"
     implementation "dcm4che:dcm4che-core"
+    // dcm4che 5.x for org.dcm4che3.data.{Attributes,Tag} — used by DicomProjectIdentifier interface
+    // and dicom-xnat-util TextExtractor/MatchedPatternExtractor in monorepo 1.10+
+    implementation "org.dcm4che:dcm4che-core:5.33.1"
     implementation "io.springfox:springfox-swagger2"
     implementation "io.springfox:springfox-swagger-ui"
 
-    compileOnly "log4j:log4j"
+    compileOnly "log4j:log4j:1.2.17"
+
+    // Compile-only deps that xnat-web no longer surfaces on consumer compileClasspath in monorepo 1.10.1+
+    implementation("turbine:turbine") {
+        exclude group: "commons-dbcp"
+        exclude group: "commons-email"
+        exclude group: "commons-pool"
+        exclude group: "fulcrum"
+        exclude group: "javax.activation", module: "activation"
+        exclude group: "javax.mail"
+        exclude group: "javax.servlet"
+        exclude group: "jython"
+        exclude group: "xalan"
+        exclude group: "xml-apis"
+        exclude group: "log4j", module: "log4j"
+        exclude group: "berkeleydb"
+        exclude group: "javax.sql"
+        exclude group: "jndi"
+        exclude group: "mysql"
+        exclude group: "tomcat"
+        exclude group: "xerces"
+        exclude group: "velocity", module: "texen"
+        exclude group: "jamon", module: "jamon"
+    }
+    compileOnly("org.apache.velocity:velocity") { transitive = false }
+    compileOnly "javax.servlet:javax.servlet-api"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api"
     testImplementation "org.springframework:spring-test"
@@ -109,19 +143,19 @@ try {
     isCleanTag = false
 }
 
-ext.gitManifest = manifest {
-    attributes "Application-Name": project.description,
-            "Build-Date": buildDate,
-            "Build-Number": buildNumber,
-            "Implementation-Version": project.version,
-            "Implementation-Sha": gitHash,
-            "Implementation-Sha-Full": gitHashFull,
-            "Implementation-Commit": commitDistance,
-            "Implementation-LastTag": lastTag,
-            "Implementation-Branch": branchName,
-            "Implementation-CleanTag": isCleanTag,
-            "Implementation-Dirty": isDirty
-}
+ext.gitManifestAttrs = [
+        "Application-Name"        : project.description,
+        "Build-Date"              : buildDate,
+        "Build-Number"            : buildNumber,
+        "Implementation-Version"  : project.version,
+        "Implementation-Sha"      : gitHash,
+        "Implementation-Sha-Full" : gitHashFull,
+        "Implementation-Commit"   : commitDistance,
+        "Implementation-LastTag"  : lastTag,
+        "Implementation-Branch"   : branchName,
+        "Implementation-CleanTag" : isCleanTag,
+        "Implementation-Dirty"    : isDirty
+]
 
 logger.info """
 Building artifacts with manifest attributes:
@@ -158,8 +192,8 @@ configurations {
 }
 
 lombok {
-    version = dependencyManagement.importedProperties["lombok.version"] as String
-    sha256 = dependencyManagement.importedProperties["lombok.checksum"] as String
+    version = "1.18.34"
+    sha256 = "1ea5ad6c6afcff902d75072b2aaa6695585aebee9f12127e15c0036ba95d2918"
 }
 
 jacocoTestReport {
@@ -176,24 +210,24 @@ java {
     //       application. All plugins must be 1.8 compatible as well. This does NOT mean
     //       the code must be compiled with Java 8, just that the compiled byte code must
     //       be compatible with running in a Java 8 environment.
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 // TODO: This builds a sources jar that pulls in the manifest with VCS info from above.
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier "sources"
+    archiveClassifier.set("sources")
     manifest {
-        from gitManifest
+        attributes gitManifestAttrs
     }
     from sourceSets.main.allSource
 }
 
 // TODO: This builds a javadoc jar that pulls in the manifest with VCS info from above.
 task javadocJar(type: Jar) {
-    classifier "javadoc"
+    archiveClassifier.set("javadoc")
     manifest {
-        from gitManifest
+        attributes gitManifestAttrs
     }
     from javadoc.destinationDir
 }
@@ -204,7 +238,7 @@ jar {
     dependsOn test, sourcesJar, javadocJar
     enabled = true
     manifest {
-        from gitManifest
+        attributes gitManifestAttrs
     }
 }
 
@@ -217,7 +251,7 @@ task xnatPluginJar(type: Jar) {
     zip64 true
     archiveClassifier.set "xpl"
     manifest {
-        from gitManifest
+        attributes gitManifestAttrs
     }
 
     // files and folders with "-dev" or "--xx" in their name
