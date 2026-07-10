@@ -1,7 +1,7 @@
 package org.nrg.xnat.plugins.template.dcm;
 
 import org.apache.commons.lang3.StringUtils;
-import org.dcm4che2.data.DicomObject;
+import org.dcm4che3.data.Attributes;
 import org.nrg.dcm.MatchedPatternExtractor;
 import org.nrg.dcm.TextExtractor;
 
@@ -30,7 +30,7 @@ public final class ConfigurableMappedAttributeExtractor extends TextExtractor {
     }
 
     @Override
-    public String extract(final DicomObject dicom) {
+    public String extract(final Attributes dicom) {
         // If the tag is empty, return null. 
         final String content = dicom.getString(getTag());
 
